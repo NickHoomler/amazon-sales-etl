@@ -30,4 +30,4 @@ jobs:
           HANZA_URL: ${{ secrets.HANZA_URL }}
           GR_TRADE_URL: ${{ secrets.GR_TRADE_URL }}
         run: |
-          python amazon_sales_etl.py
+          GetSellerDates.py
