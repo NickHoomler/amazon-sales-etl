@@ -32,4 +32,4 @@ jobs:
           DB_NAME: ${{ secrets.DB_NAME }}
         run: |
           # Убедитесь что имя файла точно совпадает
-          python commission.py || python src/commission.py || python scripts/commission.py
+          python commision.py
