@@ -15,7 +15,7 @@ GR_Trade_Dates = os.getenv('GR_TRADE_URL')
 Dict_date = {
     Vioks_dates: 636,
     Hanza_dates: 1,
-    GR_Trade_Dates: 636
+    GR_Trade_Dates: 1511
 }   # Словарь для последующей маркировки данных
 
 needed_columns = ['Date', 'SalesOrganic', 'SalesPPC', 'UnitsOrganic', 'UnitsPPC', 'GrossProfit']
