@@ -48,4 +48,4 @@ jobs:
         DB_HOST: ${{ secrets.DB_HOST }}
         DB_NAME: ${{ secrets.DB_NAME }}
       run: |
-        python commission.py
+        python commision.py
