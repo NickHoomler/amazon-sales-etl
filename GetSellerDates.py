@@ -1,9 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Jul  6 00:16:02 2025
-
-@author: User
-"""
+import os
 import time
 import pandas as pd
 from sqlalchemy import create_engine
@@ -12,9 +7,10 @@ import pymysql
 
 start_time = time.time()
 
-Vioks_dates = "https://app.sellerboard.com/ru/automation/reports?id=56e1dbce79d548818a3260f99ffcb2a0&format=csv&t=8361556bbd5d48b6bf34bf155fd93cc4"
-Hanza_dates = "https://app.sellerboard.com/ru/automation/reports?id=6e929303e5b947099a80037c91b0eaea&format=csv&t=4e24b88d08a24a1e950aca3d3c58a610"
-GR_Trade_Dates = "https://app.sellerboard.com/ru/automation/reports?id=ba3f19be5a044ae4b9b315311d863ea5&format=csv&t=94fa57e661fb4246b77f9ad944f735b9"
+# Получаем URL из переменных окружения
+Vioks_dates = os.getenv('VIOKS_URL')
+Hanza_dates = os.getenv('HANZA_URL')
+GR_Trade_Dates = os.getenv('GR_TRADE_URL')
 
 Dict_date = {
     Vioks_dates: 636,
@@ -23,8 +19,6 @@ Dict_date = {
 }   # Словарь для последующей маркировки данных
 
 needed_columns = ['Date', 'SalesOrganic', 'SalesPPC', 'UnitsOrganic', 'UnitsPPC', 'GrossProfit']
-
-
 
 final_df = pd.DataFrame()
 
@@ -49,12 +43,14 @@ for url, company_id in Dict_date.items():
     except Exception as e:
         print(f"Ошибка при обработке {url}: {e}")
 
+# Получаем конфигурацию БД из переменных окружения
 DB_CONFIG = {
-'user' : "n.osipov",
-'password': "Yt9rGxHTUnwx",
-'host' : "194.36.145.26",  # или IP-адрес сервера
-'database' : "db1",
-'table': "SellerBoard"} 
+    'user': os.getenv('DB_USER'),
+    'password': os.getenv('DB_PASSWORD'),
+    'host': os.getenv('DB_HOST'),
+    'database': os.getenv('DB_NAME'),
+    'table': "SellerBoard"
+} 
 
 try:
     # 1. Создаем подключение
