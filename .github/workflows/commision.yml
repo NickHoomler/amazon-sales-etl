@@ -19,6 +19,9 @@ jobs:
         run: |
           pip install pandas sqlalchemy pymysql gspread google-auth
           
+      - name: List files (debug)
+        run: ls -R  # Покажет структуру файлов для отладки
+          
       - name: Run sync script
         env:
           GDRIVE_CREDS: ${{ secrets.GDRIVE_CREDS }}
@@ -27,4 +30,6 @@ jobs:
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_HOST: ${{ secrets.DB_HOST }}
           DB_NAME: ${{ secrets.DB_NAME }}
-        run: python commision.py
+        run: |
+          # Убедитесь что имя файла точно совпадает
+          python commission.py || python src/commission.py || python scripts/commission.py
