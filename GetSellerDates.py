@@ -67,7 +67,7 @@ try:
     final_df.to_sql(
         name=DB_CONFIG['table'],
         con=engine,
-        if_exists='append',  
+        if_exists='replace',  
         index=False,
         chunksize=1000,
         method='multi'  # Ускорение записи
