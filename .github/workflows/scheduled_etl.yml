@@ -1,0 +1,33 @@
+name: Amazon Sales ETL
+
+on:
+  schedule:
+    - cron: '0 8 * * *'  # Ежедневно в 08:00 UTC
+  workflow_dispatch:      # Ручной запуск
+
+jobs:
+  etl:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          pip install pandas sqlalchemy pymysql
+
+      - name: Run ETL Script
+        env:
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          VIOKS_URL: ${{ secrets.VIOKS_URL }}
+          HANZA_URL: ${{ secrets.HANZA_URL }}
+          GR_TRADE_URL: ${{ secrets.GR_TRADE_URL }}
+        run: |
+          python amazon_sales_etl.py
