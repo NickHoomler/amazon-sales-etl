@@ -1,12 +1,14 @@
 name: Sync Data
 on:
   schedule:
-    - cron: '0 8 * * *'  # Ежедневно в 08:00 UTC
+    - cron: '0 8 * * *'
   workflow_dispatch:
 
 jobs:
   sync:
     runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    
     steps:
       - uses: actions/checkout@v4
       
@@ -17,19 +19,20 @@ jobs:
           
       - name: Install dependencies
         run: |
-          pip install pandas sqlalchemy pymysql gspread google-auth
+          pip install pandas==2.0.3 sqlalchemy==2.0.19 pymysql==1.1.0 
+          pip install gspread==5.11.0 google-auth==2.22.0
           
-      - name: List files (debug)
-        run: ls -R  # Покажет структуру файлов для отладки
+      - name: Verify files
+        run: |
+          ls -la
+          [ -f "commission.py" ] && echo "File exists" || echo "File missing"
           
       - name: Run sync script
         env:
-          GDRIVE_CREDS: ${{ secrets.GDRIVE_CREDS }}
           GDRIVE_FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID }}
+          GDRIVE_CREDS: ${{ secrets.GDRIVE_CREDS }}
           DB_USER: ${{ secrets.DB_USER }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_HOST: ${{ secrets.DB_HOST }}
           DB_NAME: ${{ secrets.DB_NAME }}
-        run: |
-          # Убедитесь что имя файла точно совпадает
-          python commision.py
+        run: python commission.py
