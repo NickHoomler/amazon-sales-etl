@@ -3,60 +3,71 @@ import json
 import pandas as pd
 from sqlalchemy import create_engine
 from google.oauth2 import service_account
-import gspread
-from io import StringIO
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaIoBaseDownload
+from io import BytesIO, StringIO
 import time
 
 def load_gdrive_files(folder_id, creds_json):
-    """Загружаем файлы из Google Drive с улучшенной обработкой ошибок"""
+    """Новая реализация с использованием googleapiclient"""
     try:
-        # Проверка входных данных
-        if not folder_id or not creds_json:
-            raise ValueError("Не указан folder_id или creds_json")
-            
-        print(f"🔍 Попытка подключения к Google Drive...")
+        # Инициализация клиента
+        creds_dict = json.loads(creds_json)
+        creds = service_account.Credentials.from_service_account_info(
+            creds_dict,
+            scopes=['https://www.googleapis.com/auth/drive']
+        )
         
-        # Загрузка учетных данных
-        try:
-            creds_dict = json.loads(creds_json)
-            creds = service_account.Credentials.from_service_account_info(
-                creds_dict,
-                scopes=['https://www.googleapis.com/auth/drive']
-            )
-            client = gspread.authorize(creds)
-        except Exception as auth_error:
-            raise Exception(f"Ошибка авторизации: {str(auth_error)}")
-
-        print(f"🔍 Поиск файлов в папке ID: {folder_id}")
+        service = build('drive', 'v3', credentials=creds)
         
-        try:
-            # Получаем список файлов с обработкой ошибок
-            files = client.list_spreadsheet_files(folder_id=folder_id)
-            if not files:
-                print(f"ℹ️ Папка {folder_id} пуста или не найдена")
-                return None
+        # Поиск CSV файлов в указанной папке
+        query = f"'{folder_id}' in parents and mimeType='text/csv'"
+        results = service.files().list(
+            q=query,
+            fields="files(id, name)"
+        ).execute()
+        
+        files = results.get('files', [])
+        
+        if not files:
+            print("ℹ️ В папке не найдено CSV файлов")
+            return None
 
-            dfs = []
-            for file in files:
-                try:
-                    if file['mimeType'] == 'text/csv':
-                        print(f"📥 Найден CSV файл: {file['name']} (ID: {file['id']})")
-                        content = client.export(file['id'], 'text/csv').decode('windows-1251')
-                        dfs.append(pd.read_csv(StringIO(content), sep=';', encoding='windows-1251'))
-                except Exception as file_error:
-                    print(f"⚠️ Ошибка обработки файла {file.get('name')}: {str(file_error)}")
-                    continue
+        dfs = []
+        for file in files:
+            print(f"📥 Загружаем файл: {file['name']} ({file['id']})")
             
-            return pd.concat(dfs) if dfs else None
-
-        except Exception as drive_error:
-            raise Exception(f"Ошибка Google Drive API: {str(drive_error)}")
+            # Скачивание файла
+            request = service.files().get_media(fileId=file['id'])
+            fh = BytesIO()
+            downloader = MediaIoBaseDownload(fh, request)
+            
+            done = False
+            while not done:
+                _, done = downloader.next_chunk()
+            
+            # Чтение CSV
+            content = fh.getvalue().decode('windows-1251')
+            dfs.append(pd.read_csv(StringIO(content), sep=';', encoding='windows-1251'))
+        
+        return pd.concat(dfs) if dfs else None
 
     except Exception as e:
-        print(f"❌ Критическая ошибка в load_gdrive_files: {str(e)}")
+        print(f"❌ Ошибка Google Drive API: {type(e).__name__}: {str(e)}")
         return None
 
-# ... (остальные функции остаются без изменений)
+def upload_to_mysql(df, db_config):
+    """Загрузка в MySQL (без изменений)"""
+    try:
+        engine = create_engine(
+            f"mysql+pymysql://{db_config['user']}:{db_config['password']}"
+            f"@{db_config['host']}/{db_config['database']}"
+        )
+        df.to_sql(db_config['table'], engine, if_exists='replace', index=False)
+        return True
+    except Exception as e:
+        print(f"❌ Ошибка MySQL: {str(e)}")
+        return False
 
 if __name__ == "__main__":
     start_time = time.time()
@@ -64,23 +75,18 @@ if __name__ == "__main__":
     try:
         print("🔄 Начало синхронизации...")
         
-        # Получаем переменные окружения
-        folder_id = os.getenv('GDRIVE_FOLDER_ID')
-        creds_json = os.getenv('GDRIVE_CREDS')
-        
-        print(f"ℹ️ Проверка переменных окружения...")
-        print(f"Folder ID: {'установлен' if folder_id else 'не установлен'}")
-        print(f"Credentials: {'установлены' if creds_json else 'не установлены'}")
-        
-        # 1. Загрузка данных
-        df = load_gdrive_files(folder_id, creds_json)
+        # Загрузка данных
+        df = load_gdrive_files(
+            os.getenv('GDRIVE_FOLDER_ID'),
+            os.getenv('GDRIVE_CREDS')
+        )
         
         if df is None:
-            raise Exception("Не удалось загрузить данные из Google Drive")
+            raise Exception("Нет данных для загрузки")
         
-        print(f"📊 Успешно загружено {len(df)} строк")
+        print(f"📊 Получено {len(df)} строк")
         
-        # 2. Загрузка в MySQL
+        # Загрузка в БД
         db_config = {
             'user': os.getenv('DB_USER'),
             'password': os.getenv('DB_PASSWORD'),
@@ -93,6 +99,6 @@ if __name__ == "__main__":
             print("✅ Данные успешно сохранены в MySQL")
         
     except Exception as e:
-        print(f"🔥 Критическая ошибка: {str(e)}")
+        print(f"🔥 Ошибка: {str(e)}")
     finally:
-        print(f"⏱ Общее время выполнения: {time.time() - start_time:.2f} секунд")
+        print(f"⏱ Время выполнения: {time.time() - start_time:.2f} сек")
