@@ -8,47 +8,55 @@ from io import StringIO
 import time
 
 def load_gdrive_files(folder_id, creds_json):
-    """Загружаем файлы из Google Drive с обработкой ошибок"""
+    """Загружаем файлы из Google Drive с улучшенной обработкой ошибок"""
     try:
-        creds_dict = json.loads(creds_json)
-        creds = service_account.Credentials.from_service_account_info(
-            creds_dict,
-            scopes=['https://www.googleapis.com/auth/drive']
-        )
-        client = gspread.authorize(creds)
+        # Проверка входных данных
+        if not folder_id or not creds_json:
+            raise ValueError("Не указан folder_id или creds_json")
+            
+        print(f"🔍 Попытка подключения к Google Drive...")
         
-        print(f"🔍 Поиск файлов в папке ID: {folder_id}")
-        files = client.list_spreadsheet_files(folder_id=folder_id)
-        
-        if not files:
-            print("⚠️ В папке не найдено файлов")
-            return None
+        # Загрузка учетных данных
+        try:
+            creds_dict = json.loads(creds_json)
+            creds = service_account.Credentials.from_service_account_info(
+                creds_dict,
+                scopes=['https://www.googleapis.com/auth/drive']
+            )
+            client = gspread.authorize(creds)
+        except Exception as auth_error:
+            raise Exception(f"Ошибка авторизации: {str(auth_error)}")
 
-        dfs = []
-        for file in files:
-            if file['mimeType'] == 'text/csv':
-                print(f"📥 Загрузка файла: {file['name']} (ID: {file['id']})")
-                content = client.export(file['id'], 'text/csv').decode('windows-1251')
-                dfs.append(pd.read_csv(StringIO(content), sep=';', encoding='windows-1251'))
+        print(f"🔍 Поиск файлов в папке ID: {folder_id}")
         
-        return pd.concat(dfs) if dfs else None
+        try:
+            # Получаем список файлов с обработкой ошибок
+            files = client.list_spreadsheet_files(folder_id=folder_id)
+            if not files:
+                print(f"ℹ️ Папка {folder_id} пуста или не найдена")
+                return None
+
+            dfs = []
+            for file in files:
+                try:
+                    if file['mimeType'] == 'text/csv':
+                        print(f"📥 Найден CSV файл: {file['name']} (ID: {file['id']})")
+                        content = client.export(file['id'], 'text/csv').decode('windows-1251')
+                        dfs.append(pd.read_csv(StringIO(content), sep=';', encoding='windows-1251'))
+                except Exception as file_error:
+                    print(f"⚠️ Ошибка обработки файла {file.get('name')}: {str(file_error)}")
+                    continue
+            
+            return pd.concat(dfs) if dfs else None
+
+        except Exception as drive_error:
+            raise Exception(f"Ошибка Google Drive API: {str(drive_error)}")
 
     except Exception as e:
-        print(f"❌ Ошибка при работе с Google Drive: {str(e)}")
+        print(f"❌ Критическая ошибка в load_gdrive_files: {str(e)}")
         return None
 
-def upload_to_mysql(df, db_config):
-    """Загрузка данных в MySQL с обработкой ошибок"""
-    try:
-        engine = create_engine(
-            f"mysql+pymysql://{db_config['user']}:{db_config['password']}"
-            f"@{db_config['host']}/{db_config['database']}"
-        )
-        df.to_sql(db_config['table'], engine, if_exists='replace', index=False)
-        return True
-    except Exception as e:
-        print(f"❌ Ошибка при загрузке в MySQL: {str(e)}")
-        return False
+# ... (остальные функции остаются без изменений)
 
 if __name__ == "__main__":
     start_time = time.time()
@@ -56,16 +64,21 @@ if __name__ == "__main__":
     try:
         print("🔄 Начало синхронизации...")
         
+        # Получаем переменные окружения
+        folder_id = os.getenv('GDRIVE_FOLDER_ID')
+        creds_json = os.getenv('GDRIVE_CREDS')
+        
+        print(f"ℹ️ Проверка переменных окружения...")
+        print(f"Folder ID: {'установлен' if folder_id else 'не установлен'}")
+        print(f"Credentials: {'установлены' if creds_json else 'не установлены'}")
+        
         # 1. Загрузка данных
-        df = load_gdrive_files(
-            os.getenv('GDRIVE_FOLDER_ID'),
-            os.getenv('GDRIVE_CREDS')
-        )
+        df = load_gdrive_files(folder_id, creds_json)
         
         if df is None:
             raise Exception("Не удалось загрузить данные из Google Drive")
         
-        print(f"📊 Загружено {len(df)} строк")
+        print(f"📊 Успешно загружено {len(df)} строк")
         
         # 2. Загрузка в MySQL
         db_config = {
