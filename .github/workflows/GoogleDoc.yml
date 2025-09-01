@@ -1,4 +1,4 @@
-name: Sync Data
+name: GoogleDoc
 on:
   schedule:
     - cron: '0 10 * * *'  # Daily at 08:00 UTC
