@@ -86,9 +86,6 @@ df_metro.rename(columns={
 
 df_metro['Платформа'] = 'metro'
 df_metro['Company_id'] = '1'
-del df_metro['Alle Angebote']
-del df_metro['Загружено флет-файлов']
-
 
 # Подключен Shegira -----------------------------------------------------------
 
@@ -113,7 +110,7 @@ df_ebay.rename(columns={
 
 df_ebay['Платформа'] = 'ebay'
 df_ebay['Company_id'] = '1'
-del df_ebay['Alle Angebote']
+
 
 
 # Подключение Otto------------------------------------------------------------
@@ -151,7 +148,6 @@ df_wocommerceerztail.rename(columns={
 df_wocommerceerztail['Платформа'] = 'ersatzteil'
 df_wocommerceerztail['Company_id'] = '6'
 
-del df_wocommerceerztail['Alle Angebote']
 
 # Подключение allegro-----------------------------------------------
 csv_url_allegro = f"{SHEET_URL}/gviz/tq?tqx=out:csv&sheet={SHEET_NAME_allegro}"
@@ -163,8 +159,6 @@ df_allegro.rename(columns={
 
 df_allegro['Платформа'] = 'allegro'
 df_allegro['Company_id'] = '1'
-
-del df_allegro['Alle Angebote']
 
 
 #Создаём подключение wocommere_aquade-----------------------------------------
@@ -178,7 +172,6 @@ df_erz.rename(columns={
 df_erz['Платформа'] = 'aquade'
 df_erz['Company_id'] = '1'
 
-del df_erz['Alle Angebote']
 # Собираем финальный DateFrame------------------------------------------------
 
 df_final = []
