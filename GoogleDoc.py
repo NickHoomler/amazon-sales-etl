@@ -56,7 +56,7 @@ df_grtrade['Company_id'] = '1511'
 
 # Подключение Olev-------------------------------------------------------------
 csv_url_olev = f"{SHEET_URL}/gviz/tq?tqx=out:csv&sheet={urllib.parse.quote(SHEET_NAME_Olev)}"
-df_olev= pd.read_csv(csv_url_olev)
+df_olev = pd.read_csv(csv_url_olev)
 
 df_olev.rename(columns={
     'Sales €': 'Sales',
@@ -68,7 +68,7 @@ df_olev['Company_id'] = '8'
 
 # Подключение Metro -----------------------------------------------------------
 csv_url_metro = f"{SHEET_URL}/gviz/tq?tqx=out:csv&sheet={urllib.parse.quote(SHEET_NAME_Metro)}"
-df_metro= pd.read_csv(csv_url_metro)
+df_metro = pd.read_csv(csv_url_metro)
 
 df_metro['Платформа'] = 'metro'
 df_metro['Company_id'] = '1'
@@ -151,7 +151,7 @@ df_erz.rename(columns={
 df_erz['Платформа'] = 'aquade'
 df_erz['Company_id'] = '1'
 
-# Собираем финальный DateFrame------------------------------------------------
+# Собираем финальный DataFrame------------------------------------------------
 df_final = []
 
 df_final.append(df_hansa)
@@ -169,16 +169,19 @@ df_final.append(df_erz)
 
 combined_df = pd.concat(df_final, ignore_index=True)
 
-nessery_columns = ['Date', 'Sales', 'Units', 'Inactive', 'Active', 
+# Оставляем только нужные колонки
+necessary_columns = ['Date', 'Sales', 'Units', 'Inactive', 'Active', 
                    'Платформа', 'Company_id', 'Залистовано', 
-                   'Оптимизировано', 'Active ', 'Returns']
+                   'Оптимизировано', 'Returns']  # Убрал 'Active ' с пробелом
 
-
-available_columns = [col for col in nessery_columns if col in combined_df.columns]
+available_columns = [col for col in necessary_columns if col in combined_df.columns]
 combined_df = combined_df[available_columns]
+
 # 3. Пример использования
 print(combined_df.head())
-print(combined_df.columns.tolist())
+print("Доступные колонки:", combined_df.columns.tolist())
+print(f"Всего строк: {len(combined_df)}")
+
 # Учетные данные из секретов
 DB_CONFIG = {
     'user': os.environ['DB_USER'],
@@ -203,13 +206,12 @@ try:
     combined_df.to_sql(
         name=DB_CONFIG['table'],
         con=engine,
-        if_exists='replace',  # ← Новое значение
+        if_exists='replace',
         index=False,
         chunksize=1000,
         method='multi'
     )
     print(f"✅ Данные успешно записаны в таблицу {DB_CONFIG['table']}")
-    print(f"Всего строк: {len(combined_df)}")
 
 except SQLAlchemyError as e:
     print(f"❌ Ошибка: {str(e)}")
@@ -225,7 +227,6 @@ finally:
         engine.dispose()
     print("Работа завершена")
     
-    
 end_time = time.time()
 execution_time = end_time - start_time
-print(f"Время выполнения: {execution_time} секунд")
+print(f"Время выполнения: {execution_time:.2f} секунд")
