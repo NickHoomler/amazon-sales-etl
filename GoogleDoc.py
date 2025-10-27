@@ -28,7 +28,6 @@ df_hansa = pd.read_csv(csv_url_hansa)
 
 df_hansa.rename(columns={
     'Active (FBA/FBM)': 'Active',
-    'Комментарий': 'комментарий'
 }, inplace=True)
 
 df_hansa['Платформа'] = 'amazon'
@@ -52,7 +51,6 @@ df_grtrade = pd.read_csv(csv_url_grtrade)
 
 df_grtrade.rename(columns={
     'Active (FBA/FBM)': 'Active',
-    'Комментарий': 'комментарий'
 }, inplace=True)
 
 df_grtrade['Платформа'] = 'amazon'
@@ -65,7 +63,6 @@ df_olev= pd.read_csv(csv_url_olev)
 
 df_olev.rename(columns={
     'Sales €': 'Sales',
-    'Комментарий': 'комментарий',
     'Units ordered': 'Units'
 }, inplace=True)
 
@@ -79,7 +76,6 @@ csv_url_metro = f"{SHEET_URL}/gviz/tq?tqx=out:csv&sheet={SHEET_NAME_Metro}"
 df_metro= pd.read_csv(csv_url_metro)
 
 df_metro.rename(columns={
-    'Комментарий': 'комментарий',
     'Залистовано': 'залистовано'
 }, inplace=True)
 
