@@ -75,10 +75,6 @@ df_olev['Company_id'] = '8'
 csv_url_metro = f"{SHEET_URL}/gviz/tq?tqx=out:csv&sheet={SHEET_NAME_Metro}"
 df_metro= pd.read_csv(csv_url_metro)
 
-df_metro.rename(columns={
-    'Залистовано': 'залистовано'
-}, inplace=True)
-
 
 df_metro['Платформа'] = 'metro'
 df_metro['Company_id'] = '1'
