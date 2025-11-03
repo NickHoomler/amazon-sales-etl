@@ -170,7 +170,7 @@ combined_df = pd.concat(df_final, ignore_index=True)
 
 nessery_columns = ['Date', 'Sales', 'Units', 'Inactive', 'Active', 
                    'Платформа', 'Company_id', 'Залистовано', 
-                   'Оптимизировано', 'Active ', 'Returns']
+                   'Оптимизировано', 'Active ', 'Returns', 'Комментарий']
 
 
 available_columns = [col for col in nessery_columns if col in combined_df.columns]
