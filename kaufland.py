@@ -59,6 +59,6 @@ def ReadAndWrite(url, NameOfTable):
                 engine.dispose()
             print("Работа завершена")
 
-ReadAndWrite(FeeUrl, "Fee")
+ReadAndWrite(FEE_URL, "Fee")
 ReadAndWrite(AllFeeUrl, "AllFee")
 
