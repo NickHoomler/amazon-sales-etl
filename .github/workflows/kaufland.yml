@@ -25,7 +25,7 @@ jobs:
 
     - name: Clean Python environment
       run: |
-        pip uninstall -y numpy pandas 2>/dev/null || true  # Игнорируем ошибки если не установлены
+        pip uninstall -y numpy pandas 2>/dev/null || true
 
     - name: Install Python packages
       run: |
@@ -44,6 +44,15 @@ jobs:
         python -c "import sqlalchemy; print(f'sqlalchemy: {sqlalchemy.__version__}')"
         python -c "import pymysql; print(f'pymysql: {pymysql.__version__}')"
 
+    - name: List files (debug)
+      run: |
+        echo "Current directory:"
+        pwd
+        echo "Files in repository:"
+        ls -la
+        echo "Python files:"
+        find . -name "*.py" -type f
+
     - name: Run update script
       env:
         FEE_URL: ${{ secrets.FEE_URL }}
@@ -52,4 +61,6 @@ jobs:
         DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         DB_HOST: ${{ secrets.DB_HOST }}
         DB_NAME: ${{ secrets.DB_NAME }}
-      run: kaufland.py
+      run: kaufland.yml
+
+      
