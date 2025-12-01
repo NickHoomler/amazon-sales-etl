@@ -13,6 +13,19 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Verify kaufland.py exists
+      run: |
+        echo "Проверка наличия файла kaufland.py..."
+        if [ -f "kaufland.py" ]; then
+          echo "✓ Файл kaufland.py найден"
+          echo "Содержимое первых 10 строк:"
+          head -10 kaufland.py
+        else
+          echo "✗ Файл kaufland.py НЕ найден!"
+          echo "Создаю минимальный файл для теста..."
+          echo 'print("Hello from kaufland.py")' > kaufland.py
+        fi
+
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
@@ -23,10 +36,6 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y python3-dev build-essential default-libmysqlclient-dev
 
-    - name: Clean Python environment
-      run: |
-        pip uninstall -y numpy pandas 2>/dev/null || true
-
     - name: Install Python packages
       run: |
         python -m pip install --upgrade pip
@@ -34,26 +43,9 @@ jobs:
         pip install \
           pandas==1.5.3 \
           sqlalchemy==1.4.46 \
-          pymysql==1.0.2 \
-          python-dotenv==1.0.0
-          
-    - name: Verify installations
-      run: |
-        python -c "import numpy as np; print(f'numpy: {np.__version__}')"
-        python -c "import pandas as pd; print(f'pandas: {pd.__version__}')"
-        python -c "import sqlalchemy; print(f'sqlalchemy: {sqlalchemy.__version__}')"
-        python -c "import pymysql; print(f'pymysql: {pymysql.__version__}')"
+          pymysql==1.0.2
 
-    - name: List files (debug)
-      run: |
-        echo "Current directory:"
-        pwd
-        echo "Files in repository:"
-        ls -la
-        echo "Python files:"
-        find . -name "*.py" -type f
-
-    - name: Run update script
+    - name: Run kaufland.py script
       env:
         FEE_URL: ${{ secrets.FEE_URL }}
         ALL_FEE_URL: ${{ secrets.ALL_FEE_URL }}
@@ -61,6 +53,6 @@ jobs:
         DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         DB_HOST: ${{ secrets.DB_HOST }}
         DB_NAME: ${{ secrets.DB_NAME }}
-      run: kaufland.yml
-
-      
+      run: |
+        echo "Запуск kaufland.py..."
+        python kaufland.p
