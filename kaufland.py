@@ -60,5 +60,5 @@ def ReadAndWrite(url, NameOfTable):
             print("Работа завершена")
 
 ReadAndWrite(FEE_URL, "Fee")
-ReadAndWrite(AllFeeUrl, "AllFee")
+ReadAndWrite(AALL_FEE_URL, "AllFee")
 
